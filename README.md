@@ -1,3 +1,6 @@
+# Update 3
+Liking and retweeting posts are now independent for each account! Each account tracks their liked posts, and different accounts can like each post.
+
 # Update 2
 Profile pictures + barebones settings works!
 
