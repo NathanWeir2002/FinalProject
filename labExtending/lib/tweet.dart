@@ -8,6 +8,7 @@ class Tweet{
   String? userShortName;
   String? description;
   String? imageURL;
+  String? pfpURL;
   DateTime timestamp = DateTime.now();
 
   int numComments = Random().nextInt(50);
@@ -21,6 +22,7 @@ class Tweet{
     userShortName = map['userShortName'];
     description = map['description'];
     imageURL = map['imageURL'];
+    pfpURL = map['pfpURL'];
     timestamp = (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
     numComments = map['numComments'] ?? Random().nextInt(50);
     numRetweets = map['numRetweets'] ?? Random().nextInt(100);
@@ -35,6 +37,7 @@ class Tweet{
       'userShortName': userShortName,
       'description': description,
       'imageURL': imageURL,
+      'pfpURL': pfpURL,
       'timestamp': timestamp,
       'numComments': numComments,
       'numRetweets': numRetweets,

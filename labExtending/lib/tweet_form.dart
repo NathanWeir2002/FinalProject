@@ -42,9 +42,6 @@ class _TweetFormState extends State<TweetForm> {
             ElevatedButton(
               onPressed: () {
                 saveTweet();
-                if (_description.text.isNotEmpty) {
-                  Navigator.pop(context, tweet);
-                }
               },
               child: const Text('Save'),
             ),
@@ -83,6 +80,7 @@ class _TweetFormState extends State<TweetForm> {
         'userLongName': widget.account.userLongName,
         'description': description,
         'imageURL': imageURL,
+        'pfpURL': widget.account.imageURL,
         'numComments': Random().nextInt(50),
         'numRetweets': Random().nextInt(100),
         'numLikes': Random().nextInt(100),

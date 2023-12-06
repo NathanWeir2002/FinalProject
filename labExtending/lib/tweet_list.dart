@@ -51,7 +51,7 @@ class _TweetListState extends State<TweetList> {
     ));
   }
 
-  Widget _buildTweet(BuildContext context, Tweet tweet, int index) {
+  Widget _buildTweet(BuildContext context, Tweet tweet) {
     return DisplayTweet(
       tweet: tweet,
       viewAccount: widget.account,
@@ -111,7 +111,6 @@ class _TweetListState extends State<TweetList> {
           return _buildEmptyState();
         }
         print("Found data!");
-        // Resets the list to prepare for database info to be added locally, temporarily
         print("Length: ${snapshot.data.docs.length}");
         return ListView.builder(
           padding: const EdgeInsets.all(15),
@@ -121,7 +120,7 @@ class _TweetListState extends State<TweetList> {
             Tweet tweet = Tweet.fromMap(tweetDoc.data() as Map<String, dynamic>);
             return Column(
               children: [
-                _buildTweet(context, tweet, index),
+                _buildTweet(context, tweet),
                 const SizedBox(height: 10),
                 const Divider(
                   color: Colors.grey,

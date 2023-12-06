@@ -32,6 +32,13 @@ class _DisplayTweetState extends State<DisplayTweet> {
     });
   }
 
+  void _handleHidden() {
+    setState(() {
+      isHidden = !isHidden;
+      widget.viewAccount.updateHidden(widget.tweet.tweetReference!);
+    });
+  }
+
   late bool isLiked;
   late bool isRetweeted;
   late bool isHidden;
@@ -55,11 +62,15 @@ class _DisplayTweetState extends State<DisplayTweet> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
+
+        widget.tweet.pfpURL != null
+            ? CircleAvatar(
+          backgroundImage: NetworkImage(widget.tweet.pfpURL!),
+          radius: 25.0,
+        ) : CircleAvatar(
           backgroundColor: Colors.primaries[generatedColor],
           radius: 25.0,
           child: Text(
-            // Uses the first letter of userLongName it in the user's icon
             widget.tweet.userLongName![0],
             style: const TextStyle(
               color: Colors.white,
@@ -138,8 +149,8 @@ class _DisplayTweetState extends State<DisplayTweet> {
                                 ),
                                 TextButton(
                                   onPressed: () {
+                                    _handleHidden();
                                     Navigator.of(context).pop();
-                                    // CALL REMOVE FUNCTION HERE
                                   },
                                   child: const Text('Hide'),
                                 ),
