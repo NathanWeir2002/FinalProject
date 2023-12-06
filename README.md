@@ -1,3 +1,11 @@
+# Update 1
+Many functionalities added.
+Try out the functionality with Firebase, creating and signing into accounts, and creating tweets.
+
+TODO - Adding profile pictures, making the likes and retweets local to each account (In theory, this app could work with many accounts, but in reality if one account likes/retweets something, it shows for every account), adding the following functionality, and adding the option to hide tweets.
+
+Can get this done in 2 hours.
+
 # Lab 03/04
 The starter code for lab 03-04.
 
