@@ -66,7 +66,6 @@ class _SignInFormState extends State<SignInForm> {
     var querySnapshot = await collection.get();
 
     for (var doc in querySnapshot.docs) {
-      print(doc.data());
       // Check if the document contains the field and its value
       if (doc.data().containsKey('userLongName') &&
           doc.data()['userLongName'] == userLongName &&

@@ -1,34 +1,244 @@
-import 'package:lab_extension/tweet.dart';
 import 'package:flutter/material.dart';
+import 'package:lab_extension/tweet.dart';
+import 'package:lab_extension/account.dart';
 import 'dart:math';
 
 class DisplayTweet extends StatefulWidget {
-  const DisplayTweet({Key? key, required this.tweet}) : super(key: key);
+  DisplayTweet({Key? key, required this.tweet,
+    required this.viewAccount}) : super(key: key);
 
   final Tweet tweet;
+  Account viewAccount;
 
   @override
   State<DisplayTweet> createState() => _DisplayTweetState();
 }
 
 class _DisplayTweetState extends State<DisplayTweet> {
-  void _handleRetweet() {
-    setState(() {
-      widget.tweet.isRetweeted = !widget.tweet.isRetweeted;
-      widget.tweet.updateRetweet(widget.tweet.isRetweeted);
-    });
-  }
 
   void _handleLike() {
     setState(() {
-      widget.tweet.isLiked = !widget.tweet.isLiked;
-      widget.tweet.updateLike(widget.tweet.isLiked);
+      isLiked = !isLiked;
+      widget.viewAccount.updateLikes(widget.tweet.tweetReference!);
+      widget.tweet.updateLike(isLiked);
     });
+  }
+
+  void _handleRetweet() {
+    setState(() {
+      isRetweeted = !isRetweeted;
+      widget.viewAccount.updateRetweets(widget.tweet.tweetReference!);
+      widget.tweet.updateRetweet(isRetweeted);
+    });
+  }
+
+  late bool isLiked;
+  late bool isRetweeted;
+  late bool isHidden;
+
+  @override
+  void initState() {
+    super.initState();
+
+    isLiked = widget.viewAccount.checkLikes(widget.tweet.tweetReference!);
+    isRetweeted = widget.viewAccount.checkRetweets(widget.tweet.tweetReference!);
+    isHidden = widget.viewAccount.checkHidden(widget.tweet.tweetReference!);
   }
 
   @override
   Widget build(BuildContext context) {
-    return buildTweet(context, widget.tweet, _handleRetweet, _handleLike);
+    var generatedColor = Random().nextInt(Colors.primaries.length);
+
+    if (isHidden) {
+      return Container();
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          backgroundColor: Colors.primaries[generatedColor],
+          radius: 25.0,
+          child: Text(
+            // Uses the first letter of userLongName it in the user's icon
+            widget.tweet.userLongName![0],
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10.0),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      widget.tweet.userLongName!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      // If too long, will replace text with "..."
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      ' @${widget.tweet.userShortName}',
+                      style: const TextStyle(
+                        color: Colors.grey,
+                      ),
+                      // If too long, will replace text with "..."
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Text(
+                    ' · ',
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.access_time,
+                    size: 14.0,
+                    color: Colors.grey,
+                  ),
+                  Text(
+                    formatTimeDifference(widget.tweet.timestamp),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const Spacer(),
+
+                  // UNDER CONSTRUCTION
+                  // Pop-up functionality works! Remove tweet functionality does not.
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Hide Tweet'),
+                              content: const Text(
+                                  'Are you sure you want to hide this tweet?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    // CALL REMOVE FUNCTION HERE
+                                  },
+                                  child: const Text('Hide'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: const Icon(
+                        Icons.expand_more,
+                        size: 20.0,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                widget.tweet.description!,
+                style: const TextStyle(
+                  fontSize: 16.0,
+                ),
+              ),
+              const SizedBox(height: 10.0),
+              if (widget.tweet.imageURL != "")
+                Column(
+                  children: [
+                    const SizedBox(height: 10.0),
+                    Image.network(
+                      widget.tweet.imageURL!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                    const SizedBox(height: 10.0),
+                  ],
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Comments icon, then number of comments
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.chat_bubble_outline,
+                        size: 20.0,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(widget.tweet.numComments.toString()),
+                    ],
+                  ),
+                  // Likes icon, then number of likes
+                  // Can be clicked on!
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          _handleRetweet();
+                        },
+                        child: Icon(
+                          isRetweeted ? Icons.repeat : Icons.repeat,
+                          size: 20.0,
+                          color: isRetweeted ? Colors.green : Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(widget.tweet.numRetweets.toString()),
+                    ],
+                  ),
+                  // Retweets icon, then number of retweets
+                  // Can be clicked on!
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          _handleLike();
+                        },
+                        child: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          size: 20.0,
+                          color: isLiked ? Colors.red : Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(widget.tweet.numLikes.toString()),
+                    ],
+                  ),
+                  const Icon(
+                      Icons.bookmark_border,
+                      size: 20.0,
+                      color: Colors.grey
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -50,197 +260,5 @@ String formatTimeDifference(DateTime dateTime) {
   }
 }
 
-Widget buildTweet(BuildContext context, Tweet tweet, VoidCallback handleRetweet, VoidCallback handleLike) {
-  var generatedColor = Random().nextInt(Colors.primaries.length);
 
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CircleAvatar(
-        backgroundColor: Colors.primaries[generatedColor],
-        radius: 25.0,
-        child: Text(
-          // Uses the first letter of userLongName it in the user's icon
-          tweet.userLongName![0],
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16.0,
-          ),
-        ),
-      ),
-      const SizedBox(width: 10.0),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: Text(
-                    tweet.userLongName!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    // If too long, will replace text with "..."
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    ' @${tweet.userShortName}',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                    ),
-                    // If too long, will replace text with "..."
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const Text(
-                  ' · ',
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-                const Icon(
-                  Icons.access_time,
-                  size: 14.0,
-                  color: Colors.grey,
-                ),
-                Text(
-                  formatTimeDifference(tweet.timestamp),
-                  style: const TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-                const Spacer(),
-
-                // UNDER CONSTRUCTION
-                // Pop-up functionality works! Remove tweet functionality does not.
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Hide Tweet'),
-                            content: const Text(
-                                'Are you sure you want to hide this tweet?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  // CALL REMOVE FUNCTION HERE
-                                },
-                                child: const Text('Hide'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: const Icon(
-                      Icons.expand_more,
-                      size: 20.0,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              tweet.description!,
-              style: const TextStyle(
-                fontSize: 16.0,
-              ),
-            ),
-            const SizedBox(height: 10.0),
-            if (tweet.imageURL != "")
-              Column(
-                children: [
-                  const SizedBox(height: 10.0),
-                  Image.network(
-                    tweet.imageURL!,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  const SizedBox(height: 10.0),
-                ],
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Comments icon, then number of comments
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.chat_bubble_outline,
-                      size: 20.0,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(tweet.numComments.toString()),
-                  ],
-                ),
-                // Likes icon, then number of likes
-                // Can be clicked on!
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        handleRetweet();
-                      },
-                      child: Icon(
-                        tweet.isRetweeted ? Icons.repeat : Icons.repeat,
-                        size: 20.0,
-                        color: tweet.isRetweeted ? Colors.green : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(tweet.numRetweets.toString()),
-                  ],
-                ),
-                // Retweets icon, then number of retweets
-                // Can be clicked on!
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        handleLike();
-                      },
-                      child: Icon(
-                        tweet.isLiked
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        size: 20.0,
-                        color: tweet.isLiked ? Colors.red : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(tweet.numLikes.toString()),
-                  ],
-                ),
-                const Icon(
-                    Icons.bookmark_border,
-                    size: 20.0,
-                    color: Colors.grey
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ],
-  );
-}
 

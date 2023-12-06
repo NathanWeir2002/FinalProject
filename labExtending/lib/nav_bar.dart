@@ -32,7 +32,7 @@ class _NavBarState extends State<NavBar> {
         children: [
           UserAccountsDrawerHeader(
             accountName: Text(widget.account.userLongName!),
-            accountEmail: Text(widget.account.userShortName!),
+            accountEmail: Text('@${widget.account.userShortName!}'),
             currentAccountPicture: widget.account.imageURL != null
                 ? CircleAvatar(
               backgroundImage: NetworkImage(widget.account.imageURL!),

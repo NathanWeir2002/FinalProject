@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lab_extension/tweet.dart';
+import 'package:lab_extension/account.dart';
+import 'dart:math';
 
 class TweetForm extends StatefulWidget {
-  const TweetForm({Key? key, required this.title, this.reference,
-    this.tweet, required this.userShortName, required this.userLongName}) : super(key: key);
+  const TweetForm({Key? key, required this.account}) : super(key: key);
 
-  final String title; // Will be "Edit data" or "Add data"
-  final DocumentReference? reference; // If editing data, will hold reference to that data
-  final Tweet? tweet;
-  final String? userShortName;
-  final String? userLongName;
+  final Account account;
 
   @override
   State<TweetForm> createState() => _TweetFormState();
@@ -20,25 +17,14 @@ class _TweetFormState extends State<TweetForm> {
   final TextEditingController _description = TextEditingController();
   final TextEditingController _imageURL = TextEditingController();
 
-  bool success = false;
-  Tweet? newTweet;
-
-  @override
-  void initState() {
-    super.initState();
-    // If adding data, no text will be displayed (only displays data being edited)
-    if (widget.tweet != null) {
-      Map<String, dynamic> data = widget.tweet!.toMap();
-      _description.text = data['description']!;
-      _imageURL.text = data['imageURL']!;
-    }
-  }
+  bool loading = false;
+  Tweet? tweet;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text("Create Tweet"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -57,7 +43,7 @@ class _TweetFormState extends State<TweetForm> {
               onPressed: () {
                 saveTweet();
                 if (_description.text.isNotEmpty) {
-                  Navigator.pop(context, newTweet);
+                  Navigator.pop(context, tweet);
                 }
               },
               child: const Text('Save'),
@@ -68,43 +54,59 @@ class _TweetFormState extends State<TweetForm> {
     );
   }
   void saveTweet() async {
+    setState(() {
+      loading = true; // Set loading to true to show CircularProgressIndicator
+    });
+
     final String description = _description.text;
     final String imageURL = _imageURL.text;
 
     // Will only leave page if data is entered,
     // otherwise nothing happens when "save" button is clicked
     if (description.isNotEmpty) {
-      print("Adding a new entry...");
-
-      if (widget.tweet == null) {
-        newTweet = Tweet.fromMap({
-          'userShortName': widget.userShortName,
-          'userLongName': widget.userLongName,
-          'description': description,
-          'imageURL': imageURL,
-        });
-        newTweet?.timestamp = DateTime.now();
-      } else {
-        newTweet = widget.tweet;
-        newTweet?.timestamp = DateTime.now();
-      }
-
-      final Map<String, dynamic> data = newTweet!.toMap();
-      await _addToDb(data);
+      await _saveTweet(description, imageURL);
     } else {
-      print("Enter a description!");
+      _showSnackBar("Enter a description.");
+      setState(() {
+        loading = false; // Reset loading to false on error
+      });
     }
   }
 
-  Future _addToDb(data) async{
-    // If there's no reference, it creates a new document
-    // Otherwise, it replaces the data at the reference
-    if (widget.reference == null) {
-      await FirebaseFirestore.instance.collection('tweets').doc().set(data);
-      print("Added data: $data");
-    } else {
-      await widget.reference!.set(data);
-      print("Replaced ${widget.reference} with data: $data");
+  Future _saveTweet(String description, String imageURL) async{
+    try {
+      DocumentReference docRef = FirebaseFirestore.instance.collection('tweets').doc();
+      tweet = Tweet.fromMap({
+        'posterReference': widget.account.accReference,
+        'tweetReference': docRef,
+        'userShortName': widget.account.userShortName,
+        'userLongName': widget.account.userLongName,
+        'description': description,
+        'imageURL': imageURL,
+        'numComments': Random().nextInt(50),
+        'numRetweets': Random().nextInt(100),
+        'numLikes': Random().nextInt(100),
+      });
+      await docRef.set(tweet!.toMap());
+      print("Account added!");
+      setState(() {
+        loading = false; // Reset loading to false after successful save
+      });
+      Navigator.pop(context, tweet);
+    } catch (e) {
+      _showSnackBar('Error writing to Firestore: $e');
+      setState(() {
+        loading = false; // Reset loading to false on error
+      });
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 }

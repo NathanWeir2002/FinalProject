@@ -43,23 +43,19 @@ class _TweetListState extends State<TweetList> {
     );
   }
 
-  _addTweet(BuildContext context, {Tweet? predefined}) async {
-    String? userShortName = predefined?.userShortName ?? currentShortName;
-    String? userLongName = predefined?.userLongName ?? currentLongName;
-
-    Tweet tweet = await Navigator.of(context).push(MaterialPageRoute(
+  _addTweet(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => TweetForm(
-        title: "Add Tweet",
-        reference: null,
-        tweet: predefined,
-        userShortName: userShortName,
-        userLongName: userLongName
+        account: widget.account,
       )
     ));
   }
 
   Widget _buildTweet(BuildContext context, Tweet tweet, int index) {
-    return DisplayTweet(tweet: tweet);
+    return DisplayTweet(
+      tweet: tweet,
+      viewAccount: widget.account,
+    );
   }
 
   Widget _buildEmptyState() {
@@ -122,7 +118,7 @@ class _TweetListState extends State<TweetList> {
           itemCount: snapshot.data.docs.length,
           itemBuilder: (context, index) {
             DocumentSnapshot tweetDoc = snapshot.data!.docs[index];
-            Tweet tweet = Tweet.fromMap(tweetDoc.data() as Map<String, dynamic>, reference: tweetDoc.reference);
+            Tweet tweet = Tweet.fromMap(tweetDoc.data() as Map<String, dynamic>);
             return Column(
               children: [
                 _buildTweet(context, tweet, index),

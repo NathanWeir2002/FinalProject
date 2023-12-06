@@ -75,12 +75,16 @@ class _NewAccFormState extends State<NewAccForm> {
   Future _saveAccount(String userLongName, String userShortName, String password) async {
     try {
       DocumentReference docRef = FirebaseFirestore.instance.collection('accounts').doc();
+      print("Attemping...");
       account = Account.fromMap({
+        'accReference': docRef,
+        'likedPosts': <DocumentReference>[],
+        'retweetedPosts': <DocumentReference>[],
+        'hiddenPosts': <DocumentReference>[],
         'userShortName': userShortName,
         'userLongName': userLongName,
         'password': password,
-        'followingAccs': <String>[],
-        'accReference': docRef
+        'followingAccs': <String>[]
       });
       await docRef.set(account!.toMap());
       print("Account added!");
