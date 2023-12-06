@@ -1,3 +1,6 @@
+# Update 4
+Hiding tweets works per account, and poster's profile pictures can be viewed on their posts. Their profile will not update on tweets they have made if they update their profile - will fix this soon. Following tab coming soon - viewing people's profile coming soon - Signing out coming soon.
+
 # Update 3
 Liking and retweeting posts are now independent for each account! Each account tracks their liked posts, and different accounts can like each post.
 
