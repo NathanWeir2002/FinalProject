@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:lab_extension/account.dart';
+import 'package:lab_extension/settings.dart';
 import 'dart:math';
 
-class NavBar extends StatelessWidget {
+class NavBar extends StatefulWidget {
   NavBar({Key? key, required this.account}) : super(key: key);
-  Account account;
-  var generatedColor = Colors.primaries[Random().nextInt(Colors.primaries.length)];
-  late Color pfp = generatedColor;
-  late Color bg = darken(generatedColor);
+  final Account account;
+
+  @override
+  State<NavBar> createState() => _NavBarState();
+}
+
+class _NavBarState extends State<NavBar> {
+  late Color pfp;
+  late Color bg;
+
+  @override
+  void initState() {
+    super.initState();
+    var generatedColor = Colors.primaries[Random().nextInt(Colors.primaries.length)];
+    pfp = generatedColor;
+    bg = darken(generatedColor);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +31,18 @@ class NavBar extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(account.userLongName!),
-            accountEmail: Text(account.userShortName!),
-            currentAccountPicture: CircleAvatar(
+            accountName: Text(widget.account.userLongName!),
+            accountEmail: Text(widget.account.userShortName!),
+            currentAccountPicture: widget.account.imageURL != null
+                ? CircleAvatar(
+              backgroundImage: NetworkImage(widget.account.imageURL!),
+              radius: 25.0,
+            )
+                : CircleAvatar(
               backgroundColor: pfp,
               radius: 25.0,
               child: Text(
-                // Uses the first letter of userLongName it in the user's icon
-                account.userLongName![0],
+                widget.account.userLongName![0],
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -38,39 +56,23 @@ class NavBar extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.favorite),
-            title: const Text('Favorites'),
+            title: const Text('Likes'),
             onTap: () {},
           ),
           ListTile(
             leading: const Icon(Icons.person),
-            title: const Text('Friends'),
+            title: const Text('Following'),
             onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.share),
-            title: const Text('Share'),
-            onTap: () {},
-          ),
-          const ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text('Request'),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.description),
-            title: const Text('Policies'),
-            onTap: () {},
-          ),
-          const Divider(),
-          ListTile(
-            title: const Text('Exit'),
-            leading: const Icon(Icons.exit_to_app),
-            onTap: () {},
+            onTap: () {
+              setState(() {
+                _openSettings(context, widget.account);
+              });
+            },
           ),
         ],
       ),
@@ -85,4 +87,10 @@ Color darken(Color color, [double amount = .2]) {
   final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
 
   return hslDark.toColor();
+}
+
+Future _openSettings(BuildContext context, Account account) async {
+  await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SettingsForm(account: account)
+  ));
 }

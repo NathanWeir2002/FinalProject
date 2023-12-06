@@ -12,7 +12,8 @@ class Account{
   String? imageURL;
   List <dynamic>? followingAccs;
 
-  Account.fromMap(var map, {this.accReference}){
+  Account.fromMap(var map){
+    accReference = map['accReference'];
     postReferences = map['postReferences'];
     accDescription = map['accDescription'];
     accSettings = map['accSettings'];
@@ -25,6 +26,7 @@ class Account{
 
   Map<String, Object?> toMap(){
     return {
+      'accReference': accReference,
       'postReferences': postReferences,
       'accDescription': accDescription,
       'accSettings': accSettings,
