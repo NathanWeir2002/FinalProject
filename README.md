@@ -1,3 +1,6 @@
+# Update 2
+Profile pictures + barebones settings works!
+
 # Update 1
 Many functionalities added.
 Try out the functionality with Firebase, creating and signing into accounts, and creating tweets.
