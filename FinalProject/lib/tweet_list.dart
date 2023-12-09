@@ -5,7 +5,7 @@ import 'package:final_project/display_tweet.dart';
 import 'package:final_project/tweet_form.dart';
 import 'package:final_project/account.dart';
 
-// Creates the list of tweets. This is synched to the Database, so it updates
+// Creates the list of tweets. This is synced to the Database, so it updates
 // in real-time.
 class TweetList extends StatefulWidget {
   TweetList({Key? key, required this.account,
@@ -19,8 +19,6 @@ class TweetList extends StatefulWidget {
 }
 
 class _TweetListState extends State<TweetList> {
-  // Needed for creating tweets! This does mean that if you change your name,
-  // it won't be reflected in the database. Oh, well.
   late String currentShortName;
   late String currentLongName;
 

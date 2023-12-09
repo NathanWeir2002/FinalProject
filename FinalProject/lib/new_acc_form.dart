@@ -94,7 +94,7 @@ class _NewAccFormState extends State<NewAccForm> {
         'userShortName': userShortName,
         'userLongName': userLongName,
         'password': password,
-        'followingAccs': <String>[]
+        'followingAccs': <DocumentReference>[]
       });
       await docRef.set(account!.toMap()); // Sets the data to the database.
       print("Account added!");

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:final_project/tweet_list.dart';
-import 'package:final_project/sign_in_form.dart';
-import 'package:final_project/new_acc_form.dart';
 import 'package:final_project/account.dart';
 import 'package:final_project/nav_bar.dart';
+import 'package:final_project/account_form.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -27,6 +26,7 @@ class MyApp extends StatelessWidget {
             print("Error initializing Firebase");
             return Container();
           }
+
           if (snapshot.connectionState == ConnectionState.done){
             print ("Successfully connected to Firebase");
             return MaterialApp(
@@ -61,20 +61,26 @@ class CheckIfLoggedIn extends StatefulWidget {
 
 class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
   // Holds sign in page and new account page
-  final _signInPages = [
-    const SignInForm(),
-    const NewAccForm()
-  ];
-  // Holds which page we are on
-  final _signInController = PageController();
 
-  // Holds the page index for the sign in/create account
-  int _signInNumber = 0;
   // Holds the page index for the home pages
   int _homeNumber = 0;
 
-  // Account that is currently signed in
   Account? account;
+  /*
+  Account account = Account.fromMap({
+    'likedPosts': <DocumentReference>[],
+    'retweetedPosts': <DocumentReference>[],
+    'hiddenPosts': <DocumentReference>[],
+    'userShortName': "GoogaLooga3005",
+    'userLongName': "Googa",
+    'password': "password123",
+    'followingAccs': <DocumentReference>[]
+  });
+
+   */
+
+  // Account that is currently signed in
+  //Account? account;
 
   //Forces user to either sign in or create account
   @override
@@ -92,16 +98,7 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
           context: context,
           builder: (BuildContext context) {
             // PageView - can swipe between pages
-            return PageView(
-              onPageChanged: (index) {
-                setState(() {
-                  _signInNumber = index;
-                });
-              },
-              // Controls each page
-              controller: _signInController,
-              children: _signInPages,
-            );
+            return const AccountForm();
           },
         );
 
@@ -123,7 +120,7 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
       // or if it's a standard "For You" page with all posts.
       final homePages = [
         TweetList(account: account!, following: false),
-        TweetList(account: account!, following: true),
+        TweetList(account: account!, following: true)
       ];
       final homeController = PageController();
 
@@ -136,12 +133,13 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
               drawer: NavBar(account: account!),
               // Depending on page, changes the page title.
               appBar: AppBar(
-                title: Text(_homeNumber == 0 ? 'For you' : 'Following'),
+                title: Text(
+                  _homeNumber == 0 ? 'For you' : _homeNumber == 1 ? 'Following' : _homeNumber == 2 ? 'Liked Posts' : 'Whoops!',
+                ),
               ),
               body: PageView(
                 onPageChanged: (index) {
                   setState(() {
-                    print(index);
                     _homeNumber = index;
                   });
                 },

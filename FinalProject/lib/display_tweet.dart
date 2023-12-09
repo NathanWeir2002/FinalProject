@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/tweet.dart';
 import 'package:final_project/account.dart';
-import 'dart:math';
+
 
 // Used to provide a frame for a single tweet.
 class DisplayTweet extends StatefulWidget {
@@ -23,6 +24,25 @@ class _DisplayTweetState extends State<DisplayTweet> {
   late bool isLiked;
   late bool isRetweeted;
   late bool isHidden;
+
+  late Map<String, dynamic>? userInfo;
+
+  late String userLongName = "";
+  late String userShortName = "";
+  String? pfpURL = null;
+
+  bool loadingData = true;
+
+  void fetchUserInfo() async {
+    Map<String, dynamic>? userInfo = await getUserInfo(widget.tweet.posterReference?.id ?? '');
+    setState(() {
+      this.userInfo = userInfo;
+      userLongName = userInfo?['userLongName'];
+      userShortName = userInfo?['userShortName'];
+      pfpURL = userInfo?['pfpURL'];
+      loadingData = false;
+    });
+  }
 
   // Functions to handle likes, retweets, and hiding posts.
   void _handleLike() {
@@ -53,6 +73,7 @@ class _DisplayTweetState extends State<DisplayTweet> {
   @override
   void initState() {
     super.initState();
+    fetchUserInfo();
     isLiked = widget.viewAccount.checkLikes(widget.tweet.tweetReference!);
     isRetweeted = widget.viewAccount.checkRetweets(widget.tweet.tweetReference!);
     isHidden = widget.viewAccount.checkHidden(widget.tweet.tweetReference!);
@@ -60,210 +81,218 @@ class _DisplayTweetState extends State<DisplayTweet> {
 
   @override
   Widget build(BuildContext context) {
-    var generatedColor = Random().nextInt(Colors.primaries.length);
+    late int colorIndex;
+    if (userLongName != "") {
+      colorIndex = userLongName.codeUnitAt(0) % Colors.primaries.length;
+    } else {
+      colorIndex = 0;
+    }
 
     // Doesn't display hidden tweets!
     if (isHidden) {
       return Container();
-    }
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    } else if (loadingData) {
+      return const CircularProgressIndicator();
+    } else {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
 
-        // If the poster has a pfp, displays that pfp. Otherwise,
-        // displays a Google-style circle and letter.
-        widget.tweet.pfpURL != null
-            ? CircleAvatar(
-          backgroundImage: NetworkImage(widget.tweet.pfpURL!),
-          radius: 25.0,
-        ) : CircleAvatar(
-          backgroundColor: Colors.primaries[generatedColor],
-          radius: 25.0,
-          child: Text(
-            widget.tweet.userLongName![0],
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16.0,
+          // If the poster has a pfp, displays that pfp. Otherwise,
+          // displays a Google-style circle and letter.
+          pfpURL != null
+              ? CircleAvatar(
+            backgroundImage: NetworkImage(pfpURL!),
+            radius: 25.0,
+          ) : CircleAvatar(
+            backgroundColor: Colors.primaries[colorIndex],
+            radius: 25.0,
+            child: Text(
+              userLongName[0],
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16.0,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 10.0),
+          const SizedBox(width: 10.0),
 
-        // Does magic to shorten people's user name if it's too long,
-        // and replaces text with "..." if needed.
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: Text(
-                      widget.tweet.userLongName!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      // If too long, will replace text with "..."
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      ' @${widget.tweet.userShortName}',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                      ),
-                      // If too long, will replace text with "..."
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const Text(
-                    ' · ',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.access_time,
-                    size: 14.0,
-                    color: Colors.grey,
-                  ),
-                  Text(
-                    formatTimeDifference(widget.tweet.timestamp),
-                    style: const TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Spacer(),
-
-                  // Code to hide a tweet.
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: InkWell(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Hide Tweet'),
-                              content: const Text(
-                                  'Are you sure you want to hide this tweet?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    _handleHidden();
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Hide'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      child: const Icon(
-                        Icons.expand_more,
-                        size: 20.0,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                widget.tweet.description!,
-                style: const TextStyle(
-                  fontSize: 16.0,
-                ),
-              ),
-              const SizedBox(height: 10.0),
-
-              // If there is no imageURL, it will be saved to the database
-              // as "". This is how no provided image is detected.
-              if (widget.tweet.imageURL != "")
-                Column(
+          // Does magic to shorten people's user name if it's too long,
+          // and replaces text with "..." if needed.
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    const SizedBox(height: 10.0),
-                    Image.network(
-                      widget.tweet.imageURL!,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        userLongName!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        // If too long, will replace text with "..."
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(height: 10.0),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        ' @$userShortName',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                        ),
+                        // If too long, will replace text with "..."
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Text(
+                      ' · ',
+                      style: TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.access_time,
+                      size: 14.0,
+                      color: Colors.grey,
+                    ),
+                    Text(
+                      formatTimeDifference(widget.tweet.timestamp),
+                      style: const TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // Code to hide a tweet.
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Hide Tweet'),
+                                content: const Text(
+                                    'Are you sure you want to hide this tweet?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      _handleHidden();
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Hide'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: const Icon(
+                          Icons.expand_more,
+                          size: 20.0,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Comments icon, then number of comments
-                  Row(
+                Text(
+                  widget.tweet.description!,
+                  style: const TextStyle(
+                    fontSize: 16.0,
+                  ),
+                ),
+                const SizedBox(height: 10.0),
+
+                // If there is no imageURL, it will be saved to the database
+                // as "". This is how no provided image is detected.
+                if (widget.tweet.imageURL != "")
+                  Column(
                     children: [
-                      const Icon(
-                        Icons.chat_bubble_outline,
+                      const SizedBox(height: 10.0),
+                      Image.network(
+                        widget.tweet.imageURL!,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                      const SizedBox(height: 10.0),
+                    ],
+                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Comments icon, then number of comments
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 20.0,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(widget.tweet.numComments.toString()),
+                      ],
+                    ),
+                    // Likes icon, then number of likes
+                    // Can be clicked on!
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            _handleRetweet();
+                          },
+                          child: Icon(
+                            isRetweeted ? Icons.repeat : Icons.repeat,
+                            size: 20.0,
+                            color: isRetweeted ? Colors.green : Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(widget.tweet.numRetweets.toString()),
+                      ],
+                    ),
+                    // Retweets icon, then number of retweets
+                    // Can be clicked on!
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            _handleLike();
+                          },
+                          child: Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            size: 20.0,
+                            color: isLiked ? Colors.red : Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(widget.tweet.numLikes.toString()),
+                      ],
+                    ),
+                    const Icon(
+                        Icons.bookmark_border,
                         size: 20.0,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(widget.tweet.numComments.toString()),
-                    ],
-                  ),
-                  // Likes icon, then number of likes
-                  // Can be clicked on!
-                  Row(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          _handleRetweet();
-                        },
-                        child: Icon(
-                          isRetweeted ? Icons.repeat : Icons.repeat,
-                          size: 20.0,
-                          color: isRetweeted ? Colors.green : Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(widget.tweet.numRetweets.toString()),
-                    ],
-                  ),
-                  // Retweets icon, then number of retweets
-                  // Can be clicked on!
-                  Row(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          _handleLike();
-                        },
-                        child: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          size: 20.0,
-                          color: isLiked ? Colors.red : Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(widget.tweet.numLikes.toString()),
-                    ],
-                  ),
-                  const Icon(
-                      Icons.bookmark_border,
-                      size: 20.0,
-                      color: Colors.grey
-                  ),
-                ],
-              ),
-            ],
+                        color: Colors.grey
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
   }
 }
 
@@ -286,5 +315,25 @@ String formatTimeDifference(DateTime dateTime) {
   }
 }
 
+Future<Map<String, dynamic>?> getUserInfo(String posterReference) async {
+  try {
+    DocumentSnapshot<Map<String, dynamic>> userSnapshot = await FirebaseFirestore.instance
+        .collection('accounts') // Replace 'users' with your collection name
+        .doc(posterReference)
+        .get();
 
+    if (userSnapshot.exists) {
+      return {
+        'userLongName': userSnapshot.data()?['userLongName'],
+        'userShortName': userSnapshot.data()?['userShortName'],
+        'pfpURL': userSnapshot.data()?['pfpURL'],
+      };
+    } else {
+      return null; // User with the given accountId does not exist
+    }
+  } catch (e) {
+    print('Error fetching user info: $e');
+    return null;
+  }
+}
 

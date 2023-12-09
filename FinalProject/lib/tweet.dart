@@ -4,8 +4,6 @@ import 'dart:math';
 class Tweet{
   DocumentReference? posterReference;
   DocumentReference? tweetReference;
-  String? userLongName;
-  String? userShortName;
   String? description;
   String? imageURL;
   String? pfpURL;
@@ -18,8 +16,6 @@ class Tweet{
   Tweet.fromMap(var map){
     posterReference = map['posterReference'];
     tweetReference = map['tweetReference'];
-    userLongName = map['userLongName'];
-    userShortName = map['userShortName'];
     description = map['description'];
     imageURL = map['imageURL'];
     pfpURL = map['pfpURL'];
@@ -33,8 +29,6 @@ class Tweet{
     return {
       'posterReference': posterReference,
       'tweetReference': tweetReference,
-      'userLongName': userLongName,
-      'userShortName': userShortName,
       'description': description,
       'imageURL': imageURL,
       'pfpURL': pfpURL,

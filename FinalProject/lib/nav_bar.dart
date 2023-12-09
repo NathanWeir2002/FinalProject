@@ -22,9 +22,9 @@ class _NavBarState extends State<NavBar> {
   @override
   void initState() {
     super.initState();
-    var generatedColor = Colors.primaries[Random().nextInt(Colors.primaries.length)];
-    pfp = generatedColor;
-    bg = darken(generatedColor);
+    int colorIndex = widget.account.userLongName!.codeUnitAt(0) % Colors.primaries.length;
+    pfp = Colors.primaries[colorIndex];
+    bg = darken(pfp);
   }
 
   // Builds drawer
