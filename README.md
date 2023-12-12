@@ -1,3 +1,6 @@
+# Update 5
+Google sign-in incomplete, minor changes to sign-in form, bugfix that tweets will now update if users change their profile (upon reloading the For You) page.
+
 # Update 4
 Hiding tweets works per account, and poster's profile pictures can be viewed on their posts. Their profile will not update on tweets they have made if they update their profile - will fix this soon. Following tab coming soon - viewing people's profile coming soon - Signing out coming soon.
 
