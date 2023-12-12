@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:final_project/account.dart';
 import 'package:final_project/settings.dart';
-import 'dart:math';
+import 'package:final_project/profile_form.dart';
 
 // Swipe from the left to see the cool Drawer!
 class NavBar extends StatefulWidget {
   // Needs currently signed-in account.
-  NavBar({Key? key, required this.account}) : super(key: key);
+  const NavBar({Key? key, required this.account}) : super(key: key);
+
   final Account account;
 
   @override
@@ -74,22 +75,36 @@ class _NavBarState extends State<NavBar> {
           ),
           ListTile(
             leading: const Icon(Icons.person),
-            title: const Text('Following'),
-            onTap: () {},
+            title: const Text('Profile'),
+            onTap: () {
+              _openProfile(widget.account);
+            },
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () {
-              setState(() {
-                _openSettings(context, widget.account);
-              });
+              _openSettings(widget.account);
             },
           ),
         ],
       ),
     );
+  }
+
+  // Retrieves the form for the settings.
+  Future _openSettings(Account account) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SettingsForm(account: account)
+    ));
+  }
+
+// Retrieves the form for the settings.
+  Future _openProfile(Account account) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => ProfileForm(account: account, otherAccount: null)
+    ));
   }
 }
 
@@ -101,11 +116,4 @@ Color darken(Color color, [double amount = .2]) {
   final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
 
   return hslDark.toColor();
-}
-
-// Retrieves the form for the settings.
-Future _openSettings(BuildContext context, Account account) async {
-  await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => SettingsForm(account: account)
-  ));
 }

@@ -8,8 +8,7 @@ import 'package:final_project/account.dart';
 // Creates the list of tweets. This is synced to the Database, so it updates
 // in real-time.
 class TweetList extends StatefulWidget {
-  TweetList({Key? key, required this.account,
-    required this.following}) : super(key: key);
+  TweetList({Key? key, required this.account, required this.following}) : super(key: key);
 
   Account account;
   bool following;
@@ -22,6 +21,23 @@ class _TweetListState extends State<TweetList> {
   late String currentShortName;
   late String currentLongName;
 
+  /*
+  Future<void> _updateAccountFromFirebase() async {
+    if (widget.account.accReference != null) {
+      DocumentSnapshot accountSnapshot = await widget.account.accReference!.get();
+
+      if (mounted) {
+        if (accountSnapshot.exists) {
+          setState(() {
+            widget.account = Account.fromMap(accountSnapshot.data() as Map<String, dynamic>);
+          });
+        }
+      }
+    }
+  }
+
+   */
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +47,13 @@ class _TweetListState extends State<TweetList> {
 
   @override
   Widget build(BuildContext context) {
+
+    /*
+    if (widget.following) {
+      _updateAccountFromFirebase();
+    }
+
+     */
     return Scaffold(
       body: _buildTweetFeed(context),
       floatingActionButton: FloatingActionButton(
@@ -84,10 +107,9 @@ class _TweetListState extends State<TweetList> {
 
     // If on "Following" page
     if (widget.following) {
-      if (widget.account.followingAccs!.isEmpty) {
+      if (widget.account.followingAccs.isEmpty) {
         // If user is not following anyone, searches the database for
-        // snapshots that aren't there (will return 0 tweets). Please
-        // don't set your userShortName to __INVALID__ to be a dick.
+        // snapshots that aren't there (will return 0 tweets).
         return FirebaseFirestore.instance
             .collection('tweets')
             .where('userShortName', isEqualTo: '__INVALID__') // A field that doesn't exist, ensuring no documents match
@@ -97,7 +119,7 @@ class _TweetListState extends State<TweetList> {
         // array.
         return FirebaseFirestore.instance
             .collection('tweets')
-            .where('userShortName', whereIn: widget.account.followingAccs)
+            .where('posterReference', whereIn: widget.account.followingAccs)
             .orderBy('timestamp', descending: true) // Order by 'timestamp' field
             .snapshots();
       }
@@ -105,7 +127,7 @@ class _TweetListState extends State<TweetList> {
       // Just returns all tweets - is on the "For You" page.
       return FirebaseFirestore.instance
           .collection('tweets')
-          .orderBy('timestamp', descending: true) // Order by 'timestamp' field
+          .orderBy('timestamp', descending: true)
           .snapshots();
     }
   }

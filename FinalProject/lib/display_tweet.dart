@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/tweet.dart';
 import 'package:final_project/account.dart';
-
+import 'package:final_project/profile_form.dart';
 
 // Used to provide a frame for a single tweet.
 class DisplayTweet extends StatefulWidget {
@@ -25,23 +25,27 @@ class _DisplayTweetState extends State<DisplayTweet> {
   late bool isRetweeted;
   late bool isHidden;
 
-  late Map<String, dynamic>? userInfo;
+  late Account? userInfo;
 
-  late String userLongName = "";
-  late String userShortName = "";
-  String? pfpURL = null;
+  String userLongName = "";
+  String userShortName = "";
+  String? pfpURL;
 
   bool loadingData = true;
 
   void fetchUserInfo() async {
-    Map<String, dynamic>? userInfo = await getUserInfo(widget.tweet.posterReference?.id ?? '');
-    setState(() {
-      this.userInfo = userInfo;
-      userLongName = userInfo?['userLongName'];
-      userShortName = userInfo?['userShortName'];
-      pfpURL = userInfo?['pfpURL'];
-      loadingData = false;
-    });
+    Account? userInfoData = await getUserInfo(widget.tweet.posterReference!.id);
+    if (mounted) {
+      setState(() {
+        if (userInfoData != null) {
+          userInfo = userInfoData;
+          userLongName = userInfo!.userLongName!;
+          userShortName = userInfo!.userShortName!;
+          pfpURL = userInfo!.imageURL;
+          loadingData = false;
+        }
+      });
+    }
   }
 
   // Functions to handle likes, retweets, and hiding posts.
@@ -68,19 +72,15 @@ class _DisplayTweetState extends State<DisplayTweet> {
     });
   }
 
-  // Retrieves if the signed-in user has liked/retweeted/hidden this
-  // post.
   @override
-  void initState() {
-    super.initState();
+  Widget build(BuildContext context) {
+    // Retrieves if the signed-in user has liked/retweeted/hidden this
+    // post.
     fetchUserInfo();
     isLiked = widget.viewAccount.checkLikes(widget.tweet.tweetReference!);
     isRetweeted = widget.viewAccount.checkRetweets(widget.tweet.tweetReference!);
     isHidden = widget.viewAccount.checkHidden(widget.tweet.tweetReference!);
-  }
 
-  @override
-  Widget build(BuildContext context) {
     late int colorIndex;
     if (userLongName != "") {
       colorIndex = userLongName.codeUnitAt(0) % Colors.primaries.length;
@@ -128,13 +128,19 @@ class _DisplayTweetState extends State<DisplayTweet> {
                   children: [
                     Expanded(
                       flex: 4,
-                      child: Text(
-                        userLongName!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (!loadingData) {
+                            _openProfile(userInfo!, widget.viewAccount);
+                          }
+                        },
+                        child: Text(
+                          userLongName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        // If too long, will replace text with "..."
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Expanded(
@@ -294,6 +300,12 @@ class _DisplayTweetState extends State<DisplayTweet> {
       );
     }
   }
+
+  Future _openProfile(Account account, Account otherAccount) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => ProfileForm(account: account, otherAccount: otherAccount)
+    ));
+  }
 }
 
 // Calculates the time since the Tweet was posted.
@@ -315,7 +327,7 @@ String formatTimeDifference(DateTime dateTime) {
   }
 }
 
-Future<Map<String, dynamic>?> getUserInfo(String posterReference) async {
+Future<Account?> getUserInfo(String posterReference) async {
   try {
     DocumentSnapshot<Map<String, dynamic>> userSnapshot = await FirebaseFirestore.instance
         .collection('accounts') // Replace 'users' with your collection name
@@ -323,11 +335,7 @@ Future<Map<String, dynamic>?> getUserInfo(String posterReference) async {
         .get();
 
     if (userSnapshot.exists) {
-      return {
-        'userLongName': userSnapshot.data()?['userLongName'],
-        'userShortName': userSnapshot.data()?['userShortName'],
-        'pfpURL': userSnapshot.data()?['pfpURL'],
-      };
+      return Account.fromMap(userSnapshot);
     } else {
       return null; // User with the given accountId does not exist
     }

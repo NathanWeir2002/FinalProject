@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:final_project/account.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+//import 'package:google_sign_in/google_sign_in.dart';
 
 // Form to sign into a new account. Similar to new_acc_form.
 // Probably only needed one of these forms. Oh, well.
@@ -16,10 +16,11 @@ class _AccountForm extends State<AccountForm> {
   final TextEditingController _username = TextEditingController();
   final TextEditingController _password = TextEditingController();
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']); // Scopes define the required access
+  //final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']); // Scopes define the required access
   // Account that will be found in the database.
   Account? account;
 
+  /*
   @override
   void initState() {
     super.initState();
@@ -29,6 +30,8 @@ class _AccountForm extends State<AccountForm> {
     });
     _googleSignIn.signInSilently(); // Tries to sign in silently on app launch
   }
+
+   */
 
   bool loading = false;
   bool createAccount = false;
@@ -90,10 +93,13 @@ class _AccountForm extends State<AccountForm> {
               child: const Text("Sign in"),
             ),
             const SizedBox(height: 16.0),
+            /*
             ElevatedButton(
               onPressed: _handleSignIn,
               child: const Text("Sign in with Google"),
             ),
+
+             */
           ],
         ),
       ),
@@ -107,17 +113,24 @@ class _AccountForm extends State<AccountForm> {
 
     // Will only leave page if data is entered,
     // otherwise nothing happens when "save" button is clicked
-    if (username.isNotEmpty || password.isNotEmpty) {
-      _showSnackBar("Checking accounts...");
+    if (username != "__INVALID__") {
+      if (username.isNotEmpty || password.isNotEmpty) {
+        _showSnackBar("Checking accounts...");
 
-      if (createAccount) {
-        await _checkTakenName(username);
+        if (createAccount) {
+          print("Creating account...");
+          await _checkTakenName(username);
+        } else {
+          print("Signing in to account...");
+          await _checkAccount(username, password);
+        }
       } else {
-        await _checkAccount(username, password);
+        _showSnackBar("Enter a username and password.");
       }
     } else {
-      _showSnackBar("Enter a username and password.");
+      _showSnackBar("Can't name yourself that.");
     }
+
   }
 
   // Searches through the 'accounts' section to see if any account
@@ -148,7 +161,7 @@ class _AccountForm extends State<AccountForm> {
   Future _checkTakenName(String userShortName) async{
     var collection = FirebaseFirestore.instance.collection('accounts');
     var querySnapshot = await collection.get();
-    bool matchingName = false;
+    bool matchingName  = false;
 
     for (var doc in querySnapshot.docs) {
       // Check if the document contains the field and its value
@@ -175,6 +188,7 @@ class _AccountForm extends State<AccountForm> {
         'likedPosts': <DocumentReference>[],
         'retweetedPosts': <DocumentReference>[],
         'hiddenPosts': <DocumentReference>[],
+        'myPosts': <DocumentReference>[],
         'userShortName': userShortName,
         'userLongName': userLongName,
         'password': password,
@@ -194,6 +208,7 @@ class _AccountForm extends State<AccountForm> {
     }
   }
 
+  /*
   Future<void> _handleSignIn() async {
     try {
       await _googleSignIn.signIn();
@@ -211,6 +226,7 @@ class _AccountForm extends State<AccountForm> {
   Future<void> _handleSignOut() async {
     await _googleSignIn.signOut();
   }
+  */
 
   // Yep, I yoinked this function. Thanks!
   // Shows a messsage in the snackbar.

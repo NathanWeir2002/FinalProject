@@ -6,19 +6,21 @@ class Account{
   List <dynamic> likedPosts = [];
   List <dynamic> retweetedPosts = [];
   List <dynamic> hiddenPosts = [];
+  List <dynamic> myPosts = [];
   String? accDescription;
   String? accSettings;
   String? userShortName;
   String? userLongName;
   String? password;
   String? imageURL;
-  List <dynamic>? followingAccs;
+  List <dynamic> followingAccs = [];
 
   Account.fromMap(var map){
     accReference = map['accReference'];
     likedPosts = map['likedPosts'];
     retweetedPosts = map['retweetedPosts'];
     hiddenPosts = map['hiddenPosts'];
+    myPosts = map['myPosts'];
     accDescription = map['accDescription'];
     accSettings = map['accSettings'];
     userShortName = map['userShortName'];
@@ -34,6 +36,7 @@ class Account{
       'likedPosts': likedPosts,
       'retweetedPosts': retweetedPosts,
       'hiddenPosts': hiddenPosts,
+      'myPosts': myPosts,
       'accDescription': accDescription,
       'accSettings': accSettings,
       'userShortName': userShortName,

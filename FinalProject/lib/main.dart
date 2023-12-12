@@ -6,6 +6,8 @@ import 'package:final_project/account.dart';
 import 'package:final_project/nav_bar.dart';
 import 'package:final_project/account_form.dart';
 
+
+
 void main() async {
   runApp(const MyApp());
 }
@@ -35,9 +37,9 @@ class MyApp extends StatelessWidget {
                 primarySwatch: Colors.blue,
               ),
               themeMode: ThemeMode.dark,
-
               // Forces the app to open a sign-in page before starting.
               home: const CheckIfLoggedIn(),
+              //home: ProfileForm(account: account),
             );
           }
           else{
@@ -66,18 +68,6 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
   int _homeNumber = 0;
 
   Account? account;
-  /*
-  Account account = Account.fromMap({
-    'likedPosts': <DocumentReference>[],
-    'retweetedPosts': <DocumentReference>[],
-    'hiddenPosts': <DocumentReference>[],
-    'userShortName': "GoogaLooga3005",
-    'userLongName': "Googa",
-    'password': "password123",
-    'followingAccs': <DocumentReference>[]
-  });
-
-   */
 
   // Account that is currently signed in
   //Account? account;
@@ -86,6 +76,7 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
   @override
   void initState() {
     super.initState();
+
     // It will always be null to start, code provides functionality to
     // instead hard-code account information to be uploaded
     if (account == null) {
@@ -97,7 +88,6 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
           barrierDismissible: false,
           context: context,
           builder: (BuildContext context) {
-            // PageView - can swipe between pages
             return const AccountForm();
           },
         );
@@ -130,7 +120,9 @@ class _CheckIfLoggedInState extends State<CheckIfLoggedIn> {
           children: [
             Scaffold(
               // Swipe from left side of the screen to see the cool drawer!
-              drawer: NavBar(account: account!),
+              drawer: NavBar(
+                account: account!,
+              ),
               // Depending on page, changes the page title.
               appBar: AppBar(
                 title: Text(

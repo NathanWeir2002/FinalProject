@@ -92,6 +92,8 @@ class _TweetFormState extends State<TweetForm> {
         'numLikes': Random().nextInt(100),
       });
       await docRef.set(tweet!.toMap());
+      widget.account.myPosts.add(docRef);
+      await widget.account.accReference?.update({'myPosts': FieldValue.arrayUnion([docRef])});
       print("Account added!");
       setState(() {
         loading = false; // Reset loading to false after successful save
